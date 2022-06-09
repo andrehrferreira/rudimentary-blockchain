@@ -44,8 +44,10 @@ class Server {
                     lastBlock.nonce = validation.nonce.toString(16);
                     lastBlock.minedby = validation.wallet;
                     lastBlock.reward = this.coinPerBlock;
+                    this.state.lastBlock = lastBlock;
                     this.data.push(lastBlock);
                     this.saveData();
+                    this.saveState();
 
                     console.log("Found block Nonce:"+ validation.nonce + " / Wallet: " + validation.wallet);
                 }
@@ -111,15 +113,15 @@ class Server {
     }
 
     saveData(){
-        fs.writeFileSync("./data.json", JSON.stringify(this.data));
+        fs.writeFileSync("./data.json", JSON.stringify(this.data, null, 4));
     }
 
     saveState(){
-        fs.writeFileSync("./state.json", JSON.stringify(this.state));
+        fs.writeFileSync("./state.json", JSON.stringify(this.state, null, 4));
     }
 
     createBlock(){
-        if(this.state.lastBlock.nonce && this.state.lastBlock.hash == this.createHash(this.state.lastBlock, this.state.lastBlock.nonce)){
+        if(this.state.queue.length === 0){
             const nonce = this.createNonce();
 
             let header = {

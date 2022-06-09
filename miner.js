@@ -8,9 +8,14 @@ class Miner{
     }
 
     async getBlock(){
-        console.log("Request job");
-        return await axios.get('http://localhost:3232/queue');
-        
+        //console.log("Request job");
+
+        try{
+            return await axios.get('http://localhost:3232/queue');
+        }
+        catch(e){
+            return null;
+        }        
     }
 
     async startMiner(){
@@ -26,10 +31,15 @@ class Miner{
                     this.lastBlock = block;
                     console.log("Win Nonce: " + i + " / Hash: " + block.hash);
 
-                    await axios.post('http://localhost:3232/solution', {
-                        wallet: minerWallet,
-                        nonce: i
-                    }); 
+                    try{
+                        axios.post('http://localhost:3232/solution', {
+                            wallet: minerWallet,
+                            nonce: i
+                        }); 
+                    }
+                    catch(e){
+                        console.log("Server offline... Try reconnect");
+                    }                    
 
                     break;
                 }
