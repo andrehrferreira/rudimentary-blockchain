@@ -2,6 +2,7 @@ const fs = require("fs");
 const crypto = require('crypto');
 const settingsSeed = require("./genesis.json");
 const { ethers } = require("ethers");
+const { createHash, createNonce, generateRandomId } = require("./utils");
 const blockchainData = "./data.json";
 
 class Seed {
@@ -10,18 +11,17 @@ class Seed {
     }
 
     async createSeed(){
-        const nonce = this.createNonce();
+        const nonce = createNonce();
     
         let header = {
-            id: crypto.createHash('sha1').update(new Date().getTime().toString()).digest('hex'),
+            id: generateRandomId(),
             last: "0x0",
             timestamp: new Date().getTime(),
             nonce: nonce        
         };
     
-        header.hash = this.createHash(header);
+        header.hash = createHash(header);
         header.tx = { transactions: [] };
-        let counter = 0;
 
         for(let key in settingsSeed.balance){
             const wallet = key;
@@ -39,27 +39,11 @@ class Seed {
         fs.writeFileSync(blockchainData, JSON.stringify([header], null, 4));
     }
 
-    createNonce(){
-        return this.getRandomInt(0, 1000);
-    }
-
     async sign(data){
         let wallet = new ethers.Wallet(this.privateKey);
         let dataSigned = await wallet.signMessage(JSON.stringify(data));
         return dataSigned;
     }    
-
-    createHash(header){
-        return crypto.createHash('sha1').update(
-            `${header.id}${header.last}${header.timestamp}${header.nonce}`
-        ).digest('hex');
-    }
-
-    getRandomInt(min, max) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min)) + min;
-    }
 }
 
 (async () => {
