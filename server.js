@@ -12,7 +12,7 @@ const { createHash, createNonce, generateRandomId, validateMessage } = require("
 class Server {
     constructor(data){
         this.data = data;
-        this.blockClycle = 60*10*1000;
+        this.blockClycle = 60*1*1000;
         this.coinPerBlock = 20;
         this.maxSupply = 20000000;
         this.app = express();
@@ -91,7 +91,7 @@ class Server {
         this.app.post("/solution", cors(), (req, res) => {
             const validation = req.body;
 
-            if(validation && validation.nonce){
+            if(validation && validation.nonce && this.state.queue[0]){
                 if(createHash(this.state.queue[0], validation.nonce) === this.state.queue[0].hash){
                     try{
                         let lastBlock = this.state.queue[0];
@@ -143,7 +143,7 @@ class Server {
                         console.log("Found block Nonce:"+ validation.nonce + " / Wallet: " + validation.wallet);
                     }
                     catch(e){
-                        console.log("Error: "+e);
+                        console.log("Error: ", e);
                     }
                 }
             }
@@ -234,10 +234,11 @@ class Server {
             this.state.transactions = [];
             header.hash = createHash(header, nonce);
 
-            this.state.queue.push(header);
-            this.saveState();
-
-            console.log("New block:" + header.id);
+            if(header.hash){
+                this.state.queue.push(header);
+                this.saveState();
+                console.log("New block:" + header.id);
+            }
         }
         else{
             console.log("Last block not validated.");
