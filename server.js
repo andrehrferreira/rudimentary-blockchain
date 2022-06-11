@@ -11,12 +11,22 @@ const { createHash, createNonce, generateRandomId, validateMessage } = require("
 class Server {
     constructor(data){
         this.data = data;
-        this.blockClycle = 60*1*1000;
+        this.blockClycle = 60*10*1000;
         this.coinPerBlock = 20;
         this.maxSupply = 20000000;
         this.app = express();
         this.app.use(bodyParser.urlencoded({ extended: false }))
-        this.app.use(bodyParser.json())
+        this.app.use(bodyParser.json());
+
+        this.app.get("/createwallet", (req, res) => {
+            const wallet = ethers.Wallet.createRandom();
+
+            res.send({
+                address: wallet.address,
+                privateKey: wallet.privateKey,
+                mnemonic: wallet.mnemonic.phrase
+            });
+        });
 
         this.app.get("/queue", (req, res) => {
             res.send(this.state.queue[0]);
@@ -27,7 +37,10 @@ class Server {
         });
 
         this.app.get("/balance/:wallet", (req, res) => {
-            res.send(this.state.wallets[req.params.wallet]);
+            if(this.state.wallets[req.params.wallet]) 
+                res.send({balance: this.state.wallets[req.params.wallet]}) 
+            else    
+                res.send({balance: 0});
         });
 
         this.app.post("/transaction", (req, res) => {

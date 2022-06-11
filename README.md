@@ -1,6 +1,6 @@
 # Rudimentary Blochchain
 
-* This project is a simple example of a blockchain written in Node.js, its use for production or application development is in no way recommended
+This project is a simple example of a blockchain written in Node.js, its use for production or application development is in no way recommended.
 
 - Block genesis
 - Creation of blocks
