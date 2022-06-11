@@ -4,6 +4,7 @@ const data = require("./data.json")
 const { ethers } = require("ethers");
 const { table } = require("table");
 const express = require("express");
+const cors = require('cors')
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 const { createHash, createNonce, generateRandomId, validateMessage } = require("./utils");
@@ -18,7 +19,7 @@ class Server {
         this.app.use(bodyParser.urlencoded({ extended: false }))
         this.app.use(bodyParser.json());
 
-        this.app.get("/createwallet", (req, res) => {
+        this.app.get("/createwallet", cors(), (req, res) => {
             const wallet = ethers.Wallet.createRandom();
 
             res.send({
@@ -28,22 +29,22 @@ class Server {
             });
         });
 
-        this.app.get("/queue", (req, res) => {
+        this.app.get("/queue", cors(), (req, res) => {
             res.send(this.state.queue[0]);
         });
 
-        this.app.get("/balances", (req, res) => {
+        this.app.get("/balances", cors(), (req, res) => {
             res.send(this.state.wallets);
         });
 
-        this.app.get("/balance/:wallet", (req, res) => {
+        this.app.get("/balance/:wallet", cors(), (req, res) => {
             if(this.state.wallets[req.params.wallet]) 
                 res.send({balance: this.state.wallets[req.params.wallet]}) 
             else    
                 res.send({balance: 0});
         });
 
-        this.app.post("/transaction", (req, res) => {
+        this.app.post("/transaction", cors(), (req, res) => {
             try{
                 if(req.body.tx && req.body.signature){
                     if(validateMessage(req.body.tx, req.body.signature)){
@@ -72,7 +73,7 @@ class Server {
             }
         });
 
-        this.app.get("/tx/:id", async (req, res) => {
+        this.app.get("/tx/:id", cors(), async (req, res) => {
             if(this.state.tx[req.params.id]) {
                 res.send(this.state.tx[req.params.id])
             }  
@@ -87,7 +88,7 @@ class Server {
             };
         });
 
-        this.app.post("/solution", (req, res) => {
+        this.app.post("/solution", cors(), (req, res) => {
             const validation = req.body;
 
             if(validation && validation.nonce){
