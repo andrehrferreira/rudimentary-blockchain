@@ -41,7 +41,7 @@ class Client {
 
 (async () => {
     const clientAgent = new Client("0x834ddd8a8d34ae8458cfc1d245a639fb80394dea50f34e70c7c77bb0dfe5c85f");
-    const transaction = await clientAgent.createTX("0x30924C46f73bf1733F130F28301d4c61785654Bc", 100);
+    const transaction = await clientAgent.createTX("0x30924C46f73bf1733F130F28301d4c61785654Bc", 10000);
     const { tx, signature } = transaction;
     console.log(transaction);
 

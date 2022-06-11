@@ -1,42 +1,31 @@
 {
     "wallets": {
-        "0x1Ab8E76FaeF0892CB1083d85864d7C6200FB6462": 1000000,
-        "0x30924C46f73bf1733F130F28301d4c61785654Bc": 220
+        "0x1Ab8E76FaeF0892CB1083d85864d7C6200FB6462": 989900,
+        "0x30924C46f73bf1733F130F28301d4c61785654Bc": 10520
     },
     "queue": [
         {
-            "id": "a816695ee87b578088430e03c89e797b0d4ffc6d",
-            "last": "1e3ab15883e9e2911f105a1155ebb11a2af03085",
-            "timestamp": 1654850628029,
+            "id": "f4ce34d36936cabb149f1ff3c3095a9e2e18180a",
+            "last": "5f3caaca576cf5693a67064b0efe08c00d83f096",
+            "timestamp": 1654954449252,
             "tx": {
                 "transactions": []
             },
-            "hash": "dc13ad02bb417f5b0e90d5d59c00918a42b14968"
+            "hash": "67237fe1e15ccef32f31692d8a0885a5dfee7a6a"
         }
     ],
     "lastBlock": {
-        "id": "1e3ab15883e9e2911f105a1155ebb11a2af03085",
-        "last": "9426f2835240b8c4fbd05bb833cbf21fd29280b2",
-        "timestamp": 1654850328028,
+        "id": "5f3caaca576cf5693a67064b0efe08c00d83f096",
+        "last": "73b5c35f4ff4fe9a93174f5468263f0f5f6aef17",
+        "timestamp": 1654954389254,
         "tx": {
-            "transactions": [
-                {
-                    "reciveId": "bcd419d5-895f-4190-91a1-b1df31c08847",
-                    "tx": {
-                        "id": "cce967bbfe4f9a1bdaf9b44bbf6d472d1c459ea3",
-                        "from": "0x1Ab8E76FaeF0892CB1083d85864d7C6200FB6462",
-                        "to": "0x30924C46f73bf1733F130F28301d4c61785654Bc",
-                        "balance": 100,
-                        "timestamp": 1654850128369
-                    },
-                    "signature": "0x0dbcf11b7a5599d35d5b9a6dc6e439026a6a014e5e8755bae6baf8c2d7481e8b318566f952b902ba68d37bb8f04ebf109f20ede1401500c922d5330e3fb184f21c"
-                }
-            ]
+            "transactions": []
         },
-        "hash": "c50a7ffbb7cedc71c10e675f648d250b65ed7abb",
-        "nonce": "e3d6",
+        "hash": "b264171ed4b4ac50c37eba0ad6f398ed9d387214",
+        "nonce": "80f5c",
         "minedby": "0x30924C46f73bf1733F130F28301d4c61785654Bc",
         "reward": 20
     },
+    "transactions": [],
     "tx": {}
 }

@@ -11,11 +11,10 @@ const { createHash, createNonce, generateRandomId, validateMessage } = require("
 class Server {
     constructor(data){
         this.data = data;
-        this.blockClycle = 60*5*1000;
+        this.blockClycle = 60*1*1000;
         this.coinPerBlock = 20;
         this.maxSupply = 20000000;
         this.app = express();
-        this.transactions = [];
         this.app.use(bodyParser.urlencoded({ extended: false }))
         this.app.use(bodyParser.json())
 
@@ -37,7 +36,7 @@ class Server {
                     if(validateMessage(req.body.tx, req.body.signature)){
                         const reciveId = uuidv4();
 
-                        this.transactions.push({
+                        this.state.transactions.push({
                             reciveId,
                             tx: req.body.tx,
                             signature: req.body.signature
@@ -50,6 +49,7 @@ class Server {
                             status: "queue"
                         }
 
+                        this.saveState();
                         res.send(reciveId);
                     }                
                 }
@@ -59,8 +59,19 @@ class Server {
             }
         });
 
-        this.app.get("/tx/:id", (req, res) => {
-            return (this.state.tx[req.params.id]) ? this.state.tx[req.params.id] : null;
+        this.app.get("/tx/:id", async (req, res) => {
+            if(this.state.tx[req.params.id]) {
+                res.send(this.state.tx[req.params.id])
+            }  
+            else {
+                if(fs.existsSync(`./transactions/${req.params.id}.json`)){
+                    const transaction = await fs.readFileSync(`./transactions/${req.params.id}.json`);
+                    res.send(JSON.parse(transaction.toString()));
+                }
+                else{
+                    res.status(404).end();
+                }
+            };
         });
 
         this.app.post("/solution", (req, res) => {
@@ -77,27 +88,30 @@ class Server {
 
                         this.state.wallets[validation.wallet] += this.coinPerBlock;
 
-                        if(lastBlock.tx.transactions.length > 0){
+                        if(lastBlock.tx.transactions && lastBlock.tx.transactions?.length > 0){
                             for(let key in lastBlock.tx.transactions){
                                 const transaction = lastBlock.tx.transactions[key];
 
                                 if(validateMessage(transaction.tx, transaction.signature)){
-                                    if(this.state.wallets[transaction.from] >= transaction.balance){
-                                        this.state.wallets[transaction.from] -= transaction.balance;
+                                    if(this.state.wallets[transaction.tx.from] >= transaction.tx.balance){
+                                        this.state.wallets[transaction.tx.from] -= transaction.tx.balance;
 
-                                        if(!this.state.wallets[transaction.to])
-                                            this.state.wallets[transaction.to] = 0;
+                                        if(!this.state.wallets[transaction.tx.to])
+                                            this.state.wallets[transaction.tx.to] = 0;
 
-                                        this.state.wallets[transaction.to] += transaction.balance;
+                                        this.state.wallets[transaction.tx.to] += transaction.tx.balance;
 
                                         this.state.tx[transaction.reciveId].block = lastBlock.id;
                                         this.state.tx[transaction.reciveId].status = "success";
                                         this.state.tx[transaction.reciveId].nonce = validation.nonce.toString(16);
                                         this.state.tx[transaction.reciveId].minedby = validation.wallet;
                                         this.state.tx[transaction.reciveId].reward = this.coinPerBlock;
+
+                                        lastBlock.tx.transactions[key].status = "success";
                                     }
                                     else{
                                         this.state.tx[transaction.reciveId].status = "fail";
+                                        lastBlock.tx.transactions[key].status = "fail";
                                     }
                                 }
                             }
@@ -125,6 +139,7 @@ class Server {
             wallets: {},
             queue: [],
             lastBlock: {},
+            transactions: [],
             tx: {}
         };
 
@@ -139,7 +154,7 @@ class Server {
         if(fs.existsSync("./state.json")){
             const stateCached = JSON.parse(fs.readFileSync("./state.json"));
             this.state = { ...this.state, ...stateCached };
-            console.log(table(this.stateToTable()));
+            //console.log(table(this.stateToTable()));
         }
         else{
             for(let key in this.data){                
@@ -161,7 +176,7 @@ class Server {
                 this.state.lastBlock = this.data[key];
             }
 
-            console.log(table(this.stateToTable()));
+            //console.log(table(this.stateToTable()));
             this.saveState();
         }
 
@@ -182,6 +197,11 @@ class Server {
     }
 
     saveState(){
+        for(let key in this.state.tx){
+            fs.writeFileSync(`./transactions/${key}.json`, JSON.stringify(this.state.tx[key], null, 4));
+        }
+
+        this.state.tx = {};
         fs.writeFileSync("./state.json", JSON.stringify(this.state, null, 4));
     }
 
@@ -193,10 +213,10 @@ class Server {
                 id: generateRandomId(),
                 last: this.state.lastBlock.id,
                 timestamp: new Date().getTime(),
-                tx: { transactions: this.transactions }
+                tx: { transactions: this.state.transactions }
             };
 
-            this.transactions = [];
+            this.state.transactions = [];
             header.hash = createHash(header, nonce);
 
             this.state.queue.push(header);

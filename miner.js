@@ -48,14 +48,14 @@ class Miner{
                 }
             }
         } catch(e) {}
-        
-        setTimeout(() => {
-            this.startMiner(); 
-        }, 10000);
     }
 }
 
 (() => {
     const miner = new Miner();
     miner.startMiner();
+
+    setInterval(() => {
+        miner.startMiner();
+    }, 10000);    
 })();
