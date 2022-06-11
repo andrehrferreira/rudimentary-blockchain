@@ -148,6 +148,7 @@ class Server {
         }, this.blockClycle);
 
         this.app.listen(3232);
+        console.log("Server listen on 3232");
     }   
 
     start(){

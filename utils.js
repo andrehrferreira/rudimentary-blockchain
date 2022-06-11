@@ -9,9 +9,15 @@ exports.generateRandomId = () => {
 }
 
 exports.createHash = (header, nonce) => {
-    return crypto.createHash('sha1').update(
-        `${header.id}${header.last}${header.timestamp}${nonce}`
-    ).digest('hex');
+    try{
+        return crypto.createHash('sha1').update(
+            `${header.id}${header.last}${header.timestamp}${nonce}`
+        ).digest('hex');
+    }
+    catch(e){
+        console.log(header)
+    }
+    
 }
 
 exports.createNonce = () => {

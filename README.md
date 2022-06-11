@@ -1,4 +1,6 @@
-# Simples Blockchain Sample
+# Rudimentary Blochchain
+
+* This project is a simple example of a blockchain written in Node.js, its use for production or application development is in no way recommended
 
 - Block genesis
 - Creation of blocks
@@ -42,12 +44,18 @@ $ node genesis.js
 ## Server
 
 ```bash
-$ node server.js
+$ yarn server
 ```
 
 ## Miner
 
 ```bash
-$ node miner.js
+$ yarn miner
+```
+
+## Server + Miner
+
+```bash
+$ yarn start
 ```
 
