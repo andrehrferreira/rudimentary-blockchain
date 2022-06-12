@@ -241,7 +241,7 @@ class Server {
             }
         }
         else{
-            console.log("Last block not validated.");
+            //console.log("Last block not validated.");
         }
     }
 }

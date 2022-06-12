@@ -1,18 +1,28 @@
 {
     "wallets": {
         "0x1Ab8E76FaeF0892CB1083d85864d7C6200FB6462": 1000000,
-        "0x30924C46f73bf1733F130F28301d4c61785654Bc": 300
+        "0x30924C46f73bf1733F130F28301d4c61785654Bc": 320
     },
-    "queue": [],
+    "queue": [
+        {
+            "id": "81de3701a86bcd0a6ebcf755c93764c3e154da308c9c148a9e1a6870a3e362be",
+            "last": "57994f4fe3bd8c966f077bc4aa12bcdc3c979eb347eed912fe285b79681176ff",
+            "timestamp": 1655033730467,
+            "tx": {
+                "transactions": []
+            },
+            "hash": "56731cfa804743854f660b5ae313d1d8ace3713be3d4d6d90e2da58e00f48e3c"
+        }
+    ],
     "lastBlock": {
-        "id": "161ed37ea5c7742193025782c301b511a990a8a695f36a71e79bf3c40adc49ba",
-        "last": "4b68b9d60aa8c70f2b1002a6114a864b8e9d16ef7a386689590608d5b6d9fa19",
-        "timestamp": 1655033442847,
+        "id": "57994f4fe3bd8c966f077bc4aa12bcdc3c979eb347eed912fe285b79681176ff",
+        "last": "161ed37ea5c7742193025782c301b511a990a8a695f36a71e79bf3c40adc49ba",
+        "timestamp": 1655033502842,
         "tx": {
             "transactions": []
         },
-        "hash": "27c058267462baaf73ba008ebaa1241fd1aa164a43f842dc28521be1b15486e2",
-        "nonce": "19a6",
+        "hash": "615ff990193521469106a6469ec6a9849fbeacbd79834ba5f061dd3bf37f0e7d",
+        "nonce": "19a8",
         "minedby": "0x30924C46f73bf1733F130F28301d4c61785654Bc",
         "reward": 20
     },

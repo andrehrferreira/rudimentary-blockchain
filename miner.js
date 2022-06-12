@@ -39,7 +39,7 @@ class Miner{
                     this.total++;
 
                     if(tmpHash === this.block.hash){
-                        console.log("Win Nonce: " + nonce + " / Hash: " + this.block.hash);
+                        //console.log("Win Nonce: " + nonce + " / Hash: " + this.block.hash);
 
                         try{
                             await axios.post('http://localhost:3232/solution', {
