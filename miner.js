@@ -1,8 +1,8 @@
 const axios = require('axios').default;
 const crypto = require('crypto');
 const readline = require('readline');
-const { Worker, isMainThread, parentPort, workerData } = require('node:worker_threads');
-const { createHash, createNonce, maxNonce } = require("./utils");
+const { Worker, isMainThread, parentPort } = require('node:worker_threads');
+const { createHash, createNonce } = require("./utils");
 const minerWallet = "0x30924C46f73bf1733F130F28301d4c61785654Bc";
 
 class Miner{
@@ -16,8 +16,6 @@ class Miner{
     }
 
     async getBlock(){
-        //console.log("Request job");
-
         try{
             return await axios.get('http://localhost:3232/queue');
         }
@@ -26,61 +24,35 @@ class Miner{
         }        
     }
 
-    stopMiner(){
-        clearInterval(this.persistentProgress);
-        this.lastBlock = {};
-        this.startMiner();
-    }
-
     async startMiner(block){
         try{
             this.block = block;
 
-            if(this.block.id && this.block.hash && this.block.last && this.block.timestamp && this.block.id != this.lastBlock.id){
-                console.log("New Job: " + this.block.id + " - " + this.block.timestamp);
-                
+            if(this.block.id && this.block.hash && this.block.last && this.block.timestamp){                
                 this.lastBlock = this.block;
                 this.hashRate = 0;
 
-                this.persistentProgress = setInterval(async () => {
-                    let paralaxProcess = [];
+                setInterval(async () => {
+                    const nonce = createNonce();
+                    const tmpHash = createHash(this.block, nonce);
+                    this.hashRate++;
+                    this.total++;
 
-                    for(let i = 0; i < this.maxParalaxProcess; i++){
-                        paralaxProcess.push(new Promise((resolve, reject) => {
-                            const nonce = createNonce();
-                            const tmpHash = createHash(this.block, nonce);
-                            this.hashRate++;
-                            this.total++;
+                    if(tmpHash === this.block.hash){
+                        console.log("Win Nonce: " + nonce + " / Hash: " + this.block.hash);
 
-                            if(tmpHash === this.block.hash)
-                                resolve(nonce);
-                            else
-                                resolve(null);
-                        }));
+                        try{
+                            await axios.post('http://localhost:3232/solution', {
+                                wallet: minerWallet,
+                                nonce: nonce
+                            }); 
+
+                            parentPort.postMessage("nextBlock");
+                        }
+                        catch(e){
+                            console.log("Server offline... Try reconnect");
+                        } 
                     }
-
-                    Promise.all(paralaxProcess).then(async (results) => {
-                        results.map(async (result) => {
-                            if(result){
-                                console.log("Win Nonce: " + result + " / Hash: " + this.block.hash);
-
-                                try{
-                                    await axios.post('http://localhost:3232/solution', {
-                                        wallet: minerWallet,
-                                        nonce: result
-                                    }); 
-
-                                    parentPort.postMessage("nextBlock");
-                                }
-                                catch(e){
-                                    console.log("Server offline... Try reconnect");
-                                }                    
-
-                                clearInterval(this.persistentProgress);
-                                this.startMiner();
-                            }
-                        })
-                    });
                 }, 10);
             }
         } catch(e) {}
@@ -95,10 +67,11 @@ class Miner{
 
         setInterval(async () => {
             const nextBlock = (await miner.getBlock())?.data;
-            
-            if(nextBlock.id !== lastBlockId){
+
+            if(nextBlock && nextBlock.id !== lastBlockId){
                 lastBlockId = nextBlock.id;
                 threads.map((worker) => worker.postMessage(nextBlock));
+                console.log(`New Job: ${nextBlock.id}`);
             }
         }, 3000);    
 
