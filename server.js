@@ -7,7 +7,7 @@ const express = require("express");
 const cors = require('cors')
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const { createHash, createNonce, generateRandomId, validateMessage } = require("./utils");
+const { createHash, getNextBlockId, validateMessage, calculateWeight } = require("./utils");
 
 class Server {
     constructor(data){
@@ -15,6 +15,7 @@ class Server {
         this.blockClycle = 60*1*1000;
         this.coinPerBlock = 20;
         this.maxSupply = 20000000;
+        this.difficulty = 1;
         this.app = express();
         this.app.use(bodyParser.urlencoded({ extended: false }))
         this.app.use(bodyParser.json());
@@ -102,30 +103,30 @@ class Server {
 
                         this.state.wallets[validation.wallet] += this.coinPerBlock;
 
-                        if(lastBlock.tx.transactions && lastBlock.tx.transactions?.length > 0){
-                            for(let key in lastBlock.tx.transactions){
-                                const transaction = lastBlock.tx.transactions[key];
+                        if(lastBlock.transactions && lastBlock.transactions?.length > 0){
+                            for(let key in lastBlock.transactions){
+                                const transaction = lastBlock.transactions[key];
 
-                                if(validateMessage(transaction.tx, transaction.signature)){
-                                    if(this.state.wallets[transaction.tx.from] >= transaction.tx.balance){
-                                        this.state.wallets[transaction.tx.from] -= transaction.tx.balance;
+                                if(validateMessage(transaction, transaction.signature)){
+                                    if(this.state.wallets[transaction.from] >= transaction.balance){
+                                        this.state.wallets[transaction.from] -= transaction.balance;
 
-                                        if(!this.state.wallets[transaction.tx.to])
-                                            this.state.wallets[transaction.tx.to] = 0;
+                                        if(!this.state.wallets[transaction.to])
+                                            this.state.wallets[transaction.to] = 0;
 
-                                        this.state.wallets[transaction.tx.to] += transaction.tx.balance;
+                                        this.state.wallets[transaction.to] += transaction.balance;
 
-                                        this.state.tx[transaction.reciveId].block = lastBlock.id;
-                                        this.state.tx[transaction.reciveId].status = "success";
-                                        this.state.tx[transaction.reciveId].nonce = validation.nonce.toString(16);
-                                        this.state.tx[transaction.reciveId].minedby = validation.wallet;
-                                        this.state.tx[transaction.reciveId].reward = this.coinPerBlock;
+                                        this.state.transactions[transaction.reciveId].block = lastBlock.id;
+                                        this.state.transactions[transaction.reciveId].status = "success";
+                                        this.state.transactions[transaction.reciveId].nonce = validation.nonce.toString(16);
+                                        this.state.transactions[transaction.reciveId].minedby = validation.wallet;
+                                        this.state.transactions[transaction.reciveId].reward = this.coinPerBlock;
 
-                                        lastBlock.tx.transactions[key].status = "success";
+                                        lastBlock.transactions[key].status = "success";
                                     }
                                     else{
-                                        this.state.tx[transaction.reciveId].status = "fail";
-                                        lastBlock.tx.transactions[key].status = "fail";
+                                        this.state.transactions[transaction.reciveId].status = "fail";
+                                        lastBlock.transactions[key].status = "fail";
                                     }
                                 }
                             }
@@ -153,8 +154,7 @@ class Server {
             wallets: {},
             queue: [],
             lastBlock: {},
-            transactions: [],
-            tx: {}
+            transactions: []
         };
 
         setInterval(() => {
@@ -169,12 +169,11 @@ class Server {
         if(fs.existsSync("./state.json")){
             const stateCached = JSON.parse(fs.readFileSync("./state.json"));
             this.state = { ...this.state, ...stateCached };
-            //console.log(table(this.stateToTable()));
         }
         else{
             for(let key in this.data){                
-                for(let keyTransaction in this.data[key].tx.transactions){
-                    const transation = this.data[key].tx.transactions[keyTransaction];
+                for(let keyTransaction in this.data[key].transactions){
+                    const transation = this.data[key].transactions[keyTransaction];
                     
                     if(!this.state.wallets[transation.from] && transation.from !== "0x0")
                         this.state.wallets[transation.from] = 0;
@@ -191,7 +190,6 @@ class Server {
                 this.state.lastBlock = this.data[key];
             }
 
-            //console.log(table(this.stateToTable()));
             this.saveState();
         }
 
@@ -212,33 +210,30 @@ class Server {
     }
 
     saveState(){
-        for(let key in this.state.tx){
-            fs.writeFileSync(`./transactions/${key}.json`, JSON.stringify(this.state.tx[key], null, 4));
+        for(let key in this.state.transactions){
+            fs.writeFileSync(`./transactions/${key}.json`, JSON.stringify(this.state.transactions[key], null, 4));
         }
 
-        this.state.tx = {};
+        this.state.transactions = [];
         fs.writeFileSync("./state.json", JSON.stringify(this.state, null, 4));
     }
 
     createBlock(){
         if(this.state.queue.length === 0){
-            const nonce = createNonce();
-
             let header = {
-                id: generateRandomId(),
+                id: getNextBlockId(this.state.lastBlock.id),
                 last: this.state.lastBlock.id,
                 timestamp: new Date().getTime(),
-                tx: { transactions: this.state.transactions }
+                transactions: this.state.transactions,
+                difficulty: this.difficulty
             };
 
-            this.state.transactions = [];
-            header.hash = createHash(header, nonce);
+            header.weight = calculateWeight(header);
 
-            if(header.hash){
-                this.state.queue.push(header);
-                this.saveState();
-                console.log("New block:" + header.id);
-            }
+            this.state.transactions = [];
+            this.state.queue.push(header);
+            this.saveState();
+            console.log("New block:" + header.id);            
         }
         else{
             //console.log("Last block not validated.");

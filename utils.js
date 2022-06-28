@@ -1,26 +1,45 @@
 const crypto = require('crypto');
 const { ethers } = require("ethers");
 
-const maxNonce = 10000;
-exports.maxNonce = maxNonce;
-
 exports.generateRandomId = () => {
     return crypto.createHash('sha256').update(new Date().getTime().toString()).digest('hex')
 }
 
-exports.createHash = (header, nonce) => {
-    try{
-        const dataCrypt = encrypt(`${header.id}${header.last}${header.timestamp}${nonce}`, nonce);
-        const hash = crypto.createHash('sha256').update(dataCrypt).digest('hex');
-        return hash;
+exports.createHash = (header) => {
+    let target = this.getTarget(header);
+    let hash = null;
+    let nonce = 0;
+
+    do{
+        const dataCrypt = encrypt(`${header.id}${header.last}${header.timestamp}${JSON.stringify(header.transactions)}${nonce}`, nonce);
+        hash = crypto.createHash('sha256').update(dataCrypt).digest('hex');
+        nonce++;
     }
-    catch(e){
-        console.log(header)
-    }
+    while(!this.foundHash(target, hash));
+    
+    return { nonce, hash: "0x" + hash };
+}
+
+exports.getNextBlockId = (last) => {
+    const intId = parseInt(last, 16);
+    return "0x" + (intId + 1).toString(16);
+}
+
+exports.calculateWeight = (data) => {
+    return JSON.stringify(data).length;
+}
+
+exports.getTarget = (header, difficulty = 1) => {
+    const bits = JSON.stringify(header).length;
+    return (bits * difficulty).toString('16');
+}
+
+exports.foundHash = (target, hash) =>{
+    return Buffer.compare(Buffer.from(target), Buffer.from(hash)) > 0;
 }
 
 exports.createNonce = () => {
-    return getRandomInt(0, maxNonce);
+    return getRandomInt(0, 10000000);
 }
 
 exports.validateMessage = async (tx, signature) => {

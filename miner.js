@@ -2,7 +2,7 @@ const axios = require('axios').default;
 const crypto = require('crypto');
 const readline = require('readline');
 const { Worker, isMainThread, parentPort } = require('node:worker_threads');
-const { createHash, createNonce } = require("./utils");
+const { createHash } = require("./utils");
 const minerWallet = "0x30924C46f73bf1733F130F28301d4c61785654Bc";
 
 class Miner{
@@ -28,32 +28,25 @@ class Miner{
         try{
             this.block = block;
 
-            if(this.block.id && this.block.hash && this.block.last && this.block.timestamp){                
+            if(this.block.id && this.block.difficulty && this.block.last && this.block.timestamp){                
                 this.lastBlock = this.block;
-                this.hashRate = 0;
 
-                setInterval(async () => {
-                    const nonce = createNonce();
-                    const tmpHash = createHash(this.block, nonce);
-                    this.hashRate++;
-                    this.total++;
+                const { nonce, hash } = createHash(this.block);
 
-                    if(tmpHash === this.block.hash){
-                        //console.log("Win Nonce: " + nonce + " / Hash: " + this.block.hash);
+                if(hash === this.block.hash){
+                    //console.log("Win Nonce: " + nonce + " / Hash: " + this.block.hash);
 
-                        try{
-                            await axios.post('http://localhost:3232/solution', {
-                                wallet: minerWallet,
-                                nonce: nonce
-                            }); 
-
-                            parentPort.postMessage("nextBlock");
-                        }
-                        catch(e){
-                            console.log("Server offline... Try reconnect");
-                        } 
+                    try{
+                        await axios.post('http://localhost:3232/solution', {
+                            wallet: minerWallet,
+                            nonce: nonce,
+                            hash: hash
+                        });
                     }
-                }, 10);
+                    catch(e){
+                        console.log("Server offline... Try reconnect");
+                    } 
+                }
             }
         } catch(e) {}
     }

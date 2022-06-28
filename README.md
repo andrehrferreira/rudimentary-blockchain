@@ -2,12 +2,16 @@
 
 This project is a simple example of a blockchain written in Node.js, its use for production or application development is in no way recommended.
 
-- Block genesis
-- Creation of blocks
-- Process queue
-- HTTP server
-- Miner (PoW)
-- Consolidation
+- Block genesis ✅
+- Creation of blocks ✅
+- Process queue ✅
+- Miner (PoW) ✅
+- Consolidation ✅
+- Implementation SHA256 and AES192 ✅
+- Full node 
+- Sync blockchain 
+- Pubsub
+- Tests
 
 ## Wallet Sample
 

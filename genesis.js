@@ -2,7 +2,7 @@ const fs = require("fs");
 const crypto = require('crypto');
 const settingsSeed = require("./genesis.json");
 const { ethers } = require("ethers");
-const { createHash, createNonce, generateRandomId } = require("./utils");
+const { createHash, getNextBlockId } = require("./utils");
 const blockchainData = "./data.json";
 
 class Seed {
@@ -10,31 +10,32 @@ class Seed {
         this.privateKey = privateKey;        
     }
 
-    async createSeed(){
-        const nonce = createNonce();
-    
+    async createSeed(){    
         let header = {
-            id: generateRandomId(),
+            id: getNextBlockId("0x0"),
             last: "0x0",
-            timestamp: new Date().getTime(),
-            nonce: nonce        
+            timestamp: new Date().getTime(),     
         };
     
-        header.hash = createHash(header);
-        header.tx = { transactions: [] };
+        let { nonce, hash } = createHash(header);
+
+        header.hash = hash;
+        header.nonce = nonce;
+        header.transactions = [];
 
         for(let key in settingsSeed.balance){
             const wallet = key;
             const balance = settingsSeed.balance[key];
 
-            header.tx.transactions.push({
+            let transaction = {
                 from: "0x0",
                 to: wallet,
                 balance: balance
-            });
-        }
+            };
 
-        header.tx.sign = await this.sign(header.tx);
+            transaction.sign = await this.sign(transaction);
+            header.transactions.push(transaction);
+        }        
     
         fs.writeFileSync(blockchainData, JSON.stringify([header], null, 4));
     }
